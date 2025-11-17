@@ -1,0 +1,44 @@
+# Default configuration for the Flower based "solution" pipeline.
+# The structure intentionally mirrors the FedAsync/FedBuff configs so that the
+# same hydra-like knobs are available.  Feel free to duplicate this file and
+# override FEDASYNC_SOLUTION_CONFIG to point at your own experiment.
+seed: 42
+partition_alpha: 0.5
+
+# Dataset and model knobs -----------------------------------------------------
+data:
+  dataset: cifar10        # Matches torchvision name in ``DataDistributor``
+  data_dir: ./data
+  num_classes: 10
+
+# Client behaviour ------------------------------------------------------------
+clients:
+  total: 5                # Number of federated clients to sample from
+  fraction_fit: 0.6       # Fraction sampled each round
+  batch_size: 32
+  local_epochs: 1
+  lr: 0.01
+  momentum: 0.9
+  weight_decay: 0.0005
+  staleness_range: [0.0, 1.0]   # Random delay added to metrics to mimic lag
+
+# Server/strategy knobs -------------------------------------------------------
+server:
+  rounds: 3
+  staleness_lambda: 0.5    # Larger values penalise stale updates harder
+  min_fit_clients: 3
+  min_available_clients: 5
+  fraction_evaluate: 1.0   # Evaluate every client by default
+  buffer_size: 8           # Size of m_i in the PDF
+  selection_size: 4        # |S_t|, the number of buffered updates we mix per round
+  freshness_tau: 1.0       # τ inside the freshness curve S(t)
+  align_guard: 1.0         # Guard_i(w_t, Proj_{u_i}(...)) scale
+  sideways_guard: 0.35     # Guard_i(w_t, w_{t+1}) scale (typically < align guard)
+  beta: 0.25               # β weights accuracy vs. loss in the guard
+  guard_epsilon: 1.0e-9    # Q, used everywhere to avoid divide-by-zero
+
+# Simulation/runtime ----------------------------------------------------------
+simulation:
+  log_metrics: true
+  client_resources:
+    num_cpus: 1
