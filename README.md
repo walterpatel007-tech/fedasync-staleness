@@ -22,6 +22,14 @@ FEDASYNC-STALENESS/
 │   ├── run.py
 │   └── config.yml
 │
+├── solution/
+│   ├── __init__.py
+│   ├── client.py
+│   ├── pipeline.py
+│   ├── server.py
+│   ├── run.py
+│   └── config.yaml
+│
 ├── utils/
 │   ├── helper.py
 │   ├── model.py
@@ -77,7 +85,25 @@ python -m FedAsync.run
 python -m FedBuff.run
 ```
 
+### Run the Flower based solution
+```bash
+python -m solution.run
+```
+
 Both scripts automatically initialize a server and multiple clients according to your configuration.
+
+The new ``solution`` package is fully object-oriented and consists of three
+main modules:
+
+| Module | Responsibility |
+|--------|----------------|
+| ``solution.client`` | Implements :class:`SolutionClient`, a Flower ``NumPyClient`` that encapsulates the PyTorch training and evaluation loops. |
+| ``solution.server`` | Contains the :class:`SolutionStrategy` FedAvg subclass plus helper builders for the staleness-aware aggregation logic. |
+| ``solution.pipeline`` | Offers the fully object-oriented :class:`SolutionPipeline` wrapper that prepares data, clients, and strategies programmatically. |
+| ``solution.run`` | Provides the orchestration entry point that instantiates :class:`SolutionPipeline` for ``python -m solution.run``. |
+
+All knobs live in ``solution/config.yaml`` and can be overridden via the
+``FEDASYNC_SOLUTION_CONFIG`` environment variable.
 
 ---
 
