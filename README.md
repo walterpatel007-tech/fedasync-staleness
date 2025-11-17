@@ -105,6 +105,33 @@ main modules:
 All knobs live in ``solution/config.yaml`` and can be overridden via the
 ``FEDASYNC_SOLUTION_CONFIG`` environment variable.
 
+#### How the solution mirrors the mathematical formulation
+
+The PDF included with the task states
+
+\[
+w_{t+1} = w_t + \sum_{i \in S_t} \text{Weight}_i \Big(\text{Guard}_i(w_t, \text{Proj}_{u_i}(w_t, u_i)) + \text{Guard}_i(w_t, w_{t+1})\, \text{Sideways}_i(w_t, u_i)\Big)
+\]
+
+The Flower implementation follows this flow inside
+``solution.server.SolutionStrategy``:
+
+1. **Buffers and selection (``m_i`` and ``S_t``)** — every client fit result is
+   turned into a ``BufferedUpdate`` and stored in a freshness-sorted buffer;
+   each aggregation round only consumes the top ``selection_size`` entries,
+   mimicking the "small buffer" described in the document.
+2. **Aligned vs. sideways components** — the server keeps the previous global
+   direction ``w_t - w_{t-1}`` and projects each client delta onto that axis to
+   obtain the safe ``Proj_{u_i}`` term, while the residual gives the sideways
+   component.
+3. **Guards & quality weights** — client-reported ``train_loss``, ``val_loss``,
+   ``val_accuracy`` and the simulated ``staleness`` feed straight into the two
+   guard functions and the exponential freshness weighting, ensuring stale or
+   low-quality updates only contribute a tiny sideways component.
+4. **Final mix** — after guards are applied, the weighted updates are averaged
+   and added back to ``w_t`` so ``w_{t+1}`` follows the exact order of
+   operations from the brief.
+
 ---
 
 ## 📊 3. Outputs and Logs

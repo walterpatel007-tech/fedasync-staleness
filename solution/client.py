@@ -148,10 +148,18 @@ class SolutionClient(fl.client.NumPyClient):
         return parameters_to_ndarrays(self.model)
 
     def fit(self, parameters: TensorList, config: Dict[str, str] | None = None):
+        """Train the local model and report metrics for the strategy formula."""
+
         ndarrays_to_parameters(self.model, parameters)
         loss = train_model(self.model, self.train_loader, self.device, self.cfg)
+        # The server's mathematical guard needs an immediate quality signal, so
+        # we reuse the validation loop here instead of waiting for the server to
+        # trigger ``evaluate`` separately.
+        val_loss, val_accuracy = evaluate_model(self.model, self.val_loader, self.device)
         metrics = {
             "train_loss": loss,
+            "val_loss": val_loss,
+            "val_accuracy": val_accuracy,
             "staleness": float(self.simulated_delay),
         }
         return parameters_to_ndarrays(self.model), len(self.train_loader.dataset), metrics

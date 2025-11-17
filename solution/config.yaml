@@ -29,6 +29,13 @@ server:
   min_fit_clients: 3
   min_available_clients: 5
   fraction_evaluate: 1.0   # Evaluate every client by default
+  buffer_size: 8           # Size of m_i in the PDF
+  selection_size: 4        # |S_t|, the number of buffered updates we mix per round
+  freshness_tau: 1.0       # τ inside the freshness curve S(t)
+  align_guard: 1.0         # Guard_i(w_t, Proj_{u_i}(...)) scale
+  sideways_guard: 0.35     # Guard_i(w_t, w_{t+1}) scale (typically < align guard)
+  beta: 0.25               # β weights accuracy vs. loss in the guard
+  guard_epsilon: 1.0e-9    # Q, used everywhere to avoid divide-by-zero
 
 # Simulation/runtime ----------------------------------------------------------
 simulation:
